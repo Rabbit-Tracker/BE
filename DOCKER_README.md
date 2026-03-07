@@ -8,7 +8,7 @@
 
 ## 2. docker-compose.yml
 
-프로젝트 루트에 아래 파일 생성
+프로젝트 루트에 `docker-compose.yml` 파일이 포함되어있음
 
 ```yml
 # docker-compose.yml
