@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: rabbit-tracker-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: rabbit
+      POSTGRES_PASSWORD: rabbit123
+      POSTGRES_DB: rabbit_tracker
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
