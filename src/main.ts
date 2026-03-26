@@ -1,5 +1,6 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -13,6 +14,15 @@ async function bootstrap() {
       transform: true, // 데이터 타입 자동 변환
     }),
   );
+
+  // Swagger 문서 (/docs, /docs-json)
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Rabbit Tracker API')
+    .setDescription('Rabbit Tracker API 문서')
+    .setVersion('1.0')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup('docs', app, swaggerDocument);
 
   await app.listen(process.env.PORT ?? 3000);
 }
