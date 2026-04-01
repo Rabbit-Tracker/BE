@@ -2,6 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HabitCategoryModule } from './habit-category/habit-category.module';
+import { join } from 'path';
+
+import { AuthModule } from './auth/auth.module.js';
+import { UsersModule } from './users/users.module.js';
 
 @Module({
   imports: [
@@ -19,9 +23,13 @@ import { HabitCategoryModule } from './habit-category/habit-category.module';
         database: configService.get<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: false,
+        migrations: [join(__dirname, 'migrations', '*.{js,ts}')],
+        migrationsRun: false,
       }),
     }),
     HabitCategoryModule,
+    AuthModule,
+    UsersModule,
   ],
 })
 export class AppModule {}
