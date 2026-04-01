@@ -92,7 +92,15 @@ export class AuthController {
         accessToken: result.accessToken,
         refreshToken: result.refreshToken,
         isNewUser: String(result.isNewUser),
+        userId: result.user.id,
+        nickname: result.user.nickname,
       });
+      if (result.user.email) {
+        params.set('email', result.user.email);
+      }
+      if (result.user.avatarUrl) {
+        params.set('avatarUrl', result.user.avatarUrl);
+      }
 
       const state = typeof req.query['state'] === 'string' ? req.query['state'] : undefined;
       const appReturnUrl =
