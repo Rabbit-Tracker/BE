@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsOptional, IsString, IsUUID, Length, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, IsUUID, Length, Matches, Min } from 'class-validator';
 
 export class CreateHabitCategoryDto {
   // 카테고리 소유자 (유저 UUID)
@@ -15,6 +15,14 @@ export class CreateHabitCategoryDto {
   @IsString()
   @Length(1, 10)
   icon?: string | null;
+
+  // 카테고리 색상 (선택 / HEX 코드)
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9A-Fa-f]{6}$/, {
+    message: 'color는 #RRGGBB 형식의 HEX 코드여야 해.',
+  })
+  color?: string | null;
 
   // 공개 범위 (기본값: private)
   @IsOptional()

@@ -18,7 +18,7 @@ export class HabitCategoryService {
   ) {}
 
   async create(createHabitCategoryDto: CreateHabitCategoryDto) {
-    const { userId, name, icon, visibility, sortOrder } = createHabitCategoryDto;
+    const { userId, name, icon, color, visibility, sortOrder } = createHabitCategoryDto;
 
     // 같은 유저 내에서 동일 이름 카테고리 중복 방지 (소프트삭제 제외)
     const existingCategory = await this.habitCategoryRepository.findOne({
@@ -33,6 +33,7 @@ export class HabitCategoryService {
       userId,
       name,
       icon: icon ?? null,
+      color: color ?? null,
       visibility: visibility ?? 'private',
       sortOrder: sortOrder ?? 0,
     });
@@ -85,6 +86,11 @@ export class HabitCategoryService {
         updateHabitCategoryDto.icon === undefined
           ? habitCategory.icon
           : updateHabitCategoryDto.icon,
+      // color는 null 허용이니까 undefined면 유지, null이면 명시적으로 삭제로 처리
+      color:
+        updateHabitCategoryDto.color === undefined
+          ? habitCategory.color
+          : updateHabitCategoryDto.color,
     });
 
     return await this.habitCategoryRepository.save(updatedHabitCategory);

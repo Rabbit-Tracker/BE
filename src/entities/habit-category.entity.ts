@@ -34,6 +34,10 @@ export class HabitCategory {
   @Column({ type: 'varchar', length: 10, nullable: true })
   icon: string | null;
 
+  // 카테고리 색상 (HEX 코드, 선택)
+  @Column({ type: 'varchar', length: 7, nullable: true })
+  color: string | null;
+
   // 공개 범위: private | friends | public
   @Column({ type: 'varchar', length: 10, default: 'private' })
   visibility: string;

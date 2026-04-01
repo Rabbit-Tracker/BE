@@ -14,18 +14,23 @@ import { UsersModule } from './users/users.module.js';
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: Number(configService.get<string>('DB_PORT')),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: false,
-        migrations: [join(__dirname, 'migrations', '*.{js,ts}')],
-        migrationsRun: false,
-      }),
+      useFactory: (configService: ConfigService) => {
+        // 운영 환경에서는 스키마 자동 동기화를 비활성화
+        const isProduction = configService.get<string>('NODE_ENV') === 'production';
+
+        return {
+          type: 'postgres',
+          host: configService.get<string>('DB_HOST'),
+          port: Number(configService.get<string>('DB_PORT')),
+          username: configService.get<string>('DB_USERNAME'),
+          password: configService.get<string>('DB_PASSWORD'),
+          database: configService.get<string>('DB_NAME'),
+          autoLoadEntities: true,
+          synchronize: !isProduction,
+          migrations: [join(__dirname, 'migrations', '*.{js,ts}')],
+          migrationsRun: false,
+        };
+      },
     }),
     HabitCategoryModule,
     AuthModule,

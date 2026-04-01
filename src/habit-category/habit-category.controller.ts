@@ -8,8 +8,18 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { HabitCategoryService } from './habit-category.service';
 import { CreateHabitCategoryDto } from './dto/create-habit-category.dto';
 import { UpdateHabitCategoryDto } from './dto/update-habit-category.dto';
@@ -18,6 +28,8 @@ const SWAGGER_EXAMPLE_USER_ID = '11111111-1111-1111-1111-111111111111';
 const SWAGGER_EXAMPLE_CATEGORY_ID = '22222222-2222-2222-2222-222222222222';
 
 @ApiTags('habit-categories')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('habit-categories')
 export class HabitCategoryController {
   constructor(private readonly habitCategoryService: HabitCategoryService) {}
@@ -33,6 +45,7 @@ export class HabitCategoryController {
           userId: SWAGGER_EXAMPLE_USER_ID,
           name: '운동',
           icon: '💪',
+          color: '#22C55E',
           visibility: 'private',
           sortOrder: 0,
         },
@@ -85,16 +98,16 @@ export class HabitCategoryController {
     type: UpdateHabitCategoryDto,
     examples: {
       rename: {
-        summary: '이름/아이콘 변경 예시',
-        value: { name: '공부', icon: '📚' },
+        summary: '이름/아이콘/색상 변경 예시',
+        value: { name: '공부', icon: '📚', color: '#3B82F6' },
       },
       reorder: {
         summary: '정렬/공개범위 변경 예시',
         value: { sortOrder: 10, visibility: 'friends' },
       },
       removeIcon: {
-        summary: '아이콘 제거 예시',
-        value: { icon: null },
+        summary: '아이콘/색상 제거 예시',
+        value: { icon: null, color: null },
       },
     },
   })
