@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import type { StringValue } from 'ms';
 import * as bcrypt from 'bcrypt';
 
+import type { User } from '../entities/user.entity.js';
 import { UsersService } from '../users/users.service.js';
 import { OAuthProfileDto } from './dto/oauth-profile.dto.js';
 
@@ -12,8 +13,16 @@ export interface TokenPair {
   refreshToken: string;
 }
 
+export interface AuthUserSnapshot {
+  id: string;
+  nickname: string;
+  email: string | null;
+  avatarUrl: string | null;
+}
+
 export interface AuthResult extends TokenPair {
   isNewUser: boolean;
+  user: AuthUserSnapshot;
 }
 
 @Injectable()
@@ -38,20 +47,26 @@ export class AuthService {
       profile.providerUserId,
     );
 
-    let userId: string;
+    let user: User;
     let isNewUser: boolean;
 
     if (existing) {
-      userId = existing.userId;
+      user = existing.user;
       isNewUser = false;
     } else {
       const result = await this.usersService.createWithProvider(profile);
-      userId = result.user.id;
+      user = result.user;
       isNewUser = result.isNewUser;
     }
 
-    const tokens = await this.issueTokens(userId, userAgent);
-    return { ...tokens, isNewUser };
+    const tokens = await this.issueTokens(user.id, userAgent);
+    const userSnapshot: AuthUserSnapshot = {
+      id: user.id,
+      nickname: user.nickname,
+      email: user.email,
+      avatarUrl: user.avatarUrl,
+    };
+    return { ...tokens, isNewUser, user: userSnapshot };
   }
 
   async issueTokens(userId: string, userAgent?: string): Promise<TokenPair> {
