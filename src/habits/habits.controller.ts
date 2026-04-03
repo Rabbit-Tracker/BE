@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Logger,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -12,6 +13,7 @@ import {
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { CurrentUser, type CurrentUserPayload } from '../auth/decorators/current-user.decorator.js';
 import { CreateHabitDto } from './dto/create-habit.dto.js';
+import { UpsertCheckDto } from './dto/upsert-check.dto.js';
 import { HabitsService } from './habits.service.js';
 
 @Controller('habits')
@@ -24,6 +26,16 @@ export class HabitsController {
   @Get()
   findAll(@CurrentUser() user: CurrentUserPayload) {
     return this.habitsService.findAllByUser(user.id);
+  }
+
+  @Post(':habitId/checks')
+  @HttpCode(HttpStatus.OK)
+  upsertCheck(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('habitId') habitId: string,
+    @Body() dto: UpsertCheckDto,
+  ) {
+    return this.habitsService.upsertCheck(user.id, habitId, dto);
   }
 
   @Post()
