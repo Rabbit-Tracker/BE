@@ -82,7 +82,13 @@ export class AuthService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
-    await this.usersService.createSession(userId, refreshTokenHash, expiresAt, userAgent);
+    await this.usersService.createSession(
+      sessionId,
+      userId,
+      refreshTokenHash,
+      expiresAt,
+      userAgent,
+    );
 
     return { accessToken, refreshToken };
   }
