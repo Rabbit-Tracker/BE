@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -26,6 +27,12 @@ export class HabitsController {
   @Get()
   findAll(@CurrentUser() user: CurrentUserPayload) {
     return this.habitsService.findAllByUser(user.id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  delete(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
+    return this.habitsService.delete(user.id, id);
   }
 
   @Post(':habitId/checks')

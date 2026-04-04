@@ -16,6 +16,10 @@ export class HabitsService {
     private readonly checkRepo: Repository<HabitCheck>,
   ) {}
 
+  async delete(userId: string, habitId: string): Promise<void> {
+    await this.habitRepo.softDelete({ id: habitId, userId });
+  }
+
   async findAllByUser(userId: string): Promise<Habit[]> {
     return this.habitRepo.find({
       where: { userId, status: 'active' },
