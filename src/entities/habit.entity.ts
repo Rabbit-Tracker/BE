@@ -64,6 +64,14 @@ export class Habit {
   @Column({ type: 'timestamptz' })
   startDate: Date;
 
+  // 종료 날짜 (TIMESTAMPTZ, 선택 - daily/weekly 필수)
+  @Column({ type: 'timestamptz', nullable: true })
+  endDate: Date | null;
+
+  // 제외 날짜 목록 (ISO date string 배열, '이 항목만' 수정/삭제 시 사용)
+  @Column({ type: 'text', array: true, nullable: true })
+  excludedDates: string[] | null;
+
   // 습관 아이콘 (이모지, 선택)
   @Column({ type: 'varchar', length: 10, nullable: true })
   icon: string | null;

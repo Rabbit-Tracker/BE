@@ -7,15 +7,18 @@ import {
   HttpStatus,
   Logger,
   Param,
+  Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { CurrentUser, type CurrentUserPayload } from '../auth/decorators/current-user.decorator.js';
 import { CreateHabitDto } from './dto/create-habit.dto.js';
+import { UpdateHabitDto } from './dto/update-habit.dto.js';
 import { UpsertCheckDto } from './dto/upsert-check.dto.js';
-import { HabitsService } from './habits.service.js';
+import { HabitsService, type DeleteScope } from './habits.service.js';
 
 @Controller('habits')
 @UseGuards(JwtAuthGuard)
@@ -29,10 +32,29 @@ export class HabitsController {
     return this.habitsService.findAllByUser(user.id);
   }
 
+  @Get('checks')
+  findChecks(@CurrentUser() user: CurrentUserPayload) {
+    return this.habitsService.findChecksByUser(user.id);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('id') id: string,
+    @Body() dto: UpdateHabitDto,
+  ) {
+    return this.habitsService.update(user.id, id, dto);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
-    return this.habitsService.delete(user.id, id);
+  delete(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('id') id: string,
+    @Query('scope') scope?: DeleteScope,
+    @Query('fromDate') fromDate?: string,
+  ) {
+    return this.habitsService.delete(user.id, id, scope ?? 'ALL', fromDate);
   }
 
   @Post(':habitId/checks')
