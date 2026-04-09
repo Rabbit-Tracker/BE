@@ -175,10 +175,16 @@ export class HabitsService {
   }
 
   async findAllByUser(userId: string): Promise<Habit[]> {
-    return this.habitRepo.find({
-      where: { userId, status: 'active' },
+    const habits = await this.habitRepo.find({
+      where: { userId },
       order: { createdAt: 'ASC' },
     });
+
+    // archivedAt 존재 여부를 단일 기준으로 상태를 정규화한다.
+    return habits.map((habit) => ({
+      ...habit,
+      status: habit.archivedAt ? 'archived' : 'active',
+    }));
   }
 
   async findChecksByUser(userId: string): Promise<HabitCheck[]> {
@@ -236,6 +242,31 @@ export class HabitsService {
     });
 
     return this.habitRepo.save(habit);
+  }
+
+  async archive(userId: string, habitId: string): Promise<Habit> {
+    const habit = await this.habitRepo.findOne({ where: { id: habitId, userId } });
+    if (!habit) throw new Error('습관을 찾을 수 없습니다');
+
+    await this.habitRepo.update(
+      { id: habitId, userId },
+      { archivedAt: new Date(), status: 'archived' },
+    );
+
+    const archivedHabit = await this.habitRepo.findOne({ where: { id: habitId, userId } });
+    if (!archivedHabit) throw new Error('습관을 찾을 수 없습니다');
+    return archivedHabit;
+  }
+
+  async unarchive(userId: string, habitId: string): Promise<Habit> {
+    const habit = await this.habitRepo.findOne({ where: { id: habitId, userId } });
+    if (!habit) throw new Error('습관을 찾을 수 없습니다');
+
+    await this.habitRepo.update({ id: habitId, userId }, { archivedAt: null, status: 'active' });
+
+    const unarchivedHabit = await this.habitRepo.findOne({ where: { id: habitId, userId } });
+    if (!unarchivedHabit) throw new Error('습관을 찾을 수 없습니다');
+    return unarchivedHabit;
   }
 
   private getCompletedDateKeys(habit: Habit, checks: HabitCheck[]): string[] {

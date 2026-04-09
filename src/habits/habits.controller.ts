@@ -46,6 +46,16 @@ export class HabitsController {
     return this.habitsService.update(user.id, id, dto);
   }
 
+  @Patch(':id/archive')
+  archive(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
+    return this.habitsService.archive(user.id, id);
+  }
+
+  @Patch(':id/unarchive')
+  unarchive(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
+    return this.habitsService.unarchive(user.id, id);
+  }
+
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(
