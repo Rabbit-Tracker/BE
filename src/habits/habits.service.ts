@@ -75,6 +75,17 @@ export class HabitsService {
         .andWhere('"isChecked" = false')
         .execute();
 
+      // fromDate 이후 "완료된 날짜"는 새 습관에서 제외해야 함.
+      // (완료된 날에 수정된 할 일이 새로 생기는 현상 방지)
+      const completedChecks = await this.checkRepo
+        .createQueryBuilder('check')
+        .where('check.habitId = :habitId', { habitId })
+        .andWhere('check.isChecked = true')
+        .andWhere('check.checkDate >= :fromDate', { fromDate: fromDateObj })
+        .getMany();
+
+      const completedDateKeys = this.getCompletedDateKeys(habit, completedChecks);
+
       // 새 습관 생성 (fromDate부터 시작)
       const newHabit = await this.habitRepo.save(
         this.habitRepo.create({
@@ -92,22 +103,12 @@ export class HabitsService {
           notificationTimes: dto.notificationTimes ?? habit.notificationTimes,
           startDate: new Date(fromDate),
           endDate: dto.endDate ? new Date(dto.endDate) : null,
-          excludedDates: null,
+          excludedDates: completedDateKeys.length > 0 ? completedDateKeys : null,
           icon: dto.icon !== undefined ? (dto.icon ?? null) : habit.icon,
           categoryId: dto.categoryId !== undefined ? (dto.categoryId ?? null) : habit.categoryId,
           status: 'active',
         }),
       );
-
-      // fromDate 이후 완료(isChecked=true) 체크를 새 습관으로 이관
-      await this.checkRepo
-        .createQueryBuilder()
-        .update()
-        .set({ habitId: newHabit.id })
-        .where('"habit_id" = :habitId', { habitId })
-        .andWhere('"checkDate" >= :fromDate', { fromDate: fromDateObj })
-        .andWhere('"isChecked" = true')
-        .execute();
 
       return newHabit;
     }
@@ -235,5 +236,46 @@ export class HabitsService {
     });
 
     return this.habitRepo.save(habit);
+  }
+
+  private getCompletedDateKeys(habit: Habit, checks: HabitCheck[]): string[] {
+    if (checks.length === 0) return [];
+
+    const checksByDateKey = new Map<string, HabitCheck[]>();
+    for (const check of checks) {
+      const dateKey = this.toDateKeyLocal(check.checkDate);
+      const current = checksByDateKey.get(dateKey) ?? [];
+      current.push(check);
+      checksByDateKey.set(dateKey, current);
+    }
+
+    const notificationTimes = habit.notificationTimes ?? [];
+    const completedDateKeys: string[] = [];
+
+    for (const [dateKey, dateChecks] of checksByDateKey.entries()) {
+      if (notificationTimes.length > 0) {
+        const allTimesChecked = notificationTimes.every((time) =>
+          dateChecks.some((check) => check.notificationTime === time && check.isChecked),
+        );
+        if (allTimesChecked) {
+          completedDateKeys.push(dateKey);
+        }
+        continue;
+      }
+
+      const hasChecked = dateChecks.some((check) => check.isChecked);
+      if (hasChecked) {
+        completedDateKeys.push(dateKey);
+      }
+    }
+
+    return completedDateKeys.sort();
+  }
+
+  private toDateKeyLocal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 }
