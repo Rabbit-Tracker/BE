@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module.js';
 import { HabitsModule } from './habits/habits.module.js';
 import { UsersModule } from './users/users.module.js';
 
+import { StatisticsModule } from './statistics/statistics.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,6 +32,7 @@ import { UsersModule } from './users/users.module.js';
     AuthModule,
     HabitsModule,
     UsersModule,
+    StatisticsModule,
   ],
 })
 export class AppModule {}
