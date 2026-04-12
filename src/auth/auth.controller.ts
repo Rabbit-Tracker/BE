@@ -15,7 +15,9 @@ import type { Request, Response } from 'express';
 import { AuthService, TokenPair } from './auth.service.js';
 import { OAuthProfileDto } from './dto/oauth-profile.dto.js';
 import { RefreshTokenDto } from './dto/refresh-token.dto.js';
+import { CurrentUser, type CurrentUserPayload } from './decorators/current-user.decorator.js';
 import { GoogleAuthGuard } from './guards/google-auth.guard.js';
+import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
 import { KakaoAuthGuard } from './guards/kakao-auth.guard.js';
 import { OauthRedirectStore } from './oauth-redirect.store.js';
 
@@ -79,6 +81,14 @@ export class AuthController {
   async logout(@Body() dto: RefreshTokenDto) {
     await this.authService.logout(dto.refreshToken);
     return { message: '로그아웃 되었습니다' };
+  }
+
+  // ─── 현재 사용자 (JWT) ──────────────────────────────────────
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  me(@CurrentUser() user: CurrentUserPayload): CurrentUserPayload {
+    return user;
   }
 
   // ─── 공통 OAuth 콜백 처리 ──────────────────────────────────────

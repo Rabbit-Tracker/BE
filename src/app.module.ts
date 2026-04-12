@@ -5,7 +5,10 @@ import { HabitCategoryModule } from './habit-category/habit-category.module';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module.js';
+import { HabitsModule } from './habits/habits.module.js';
 import { UsersModule } from './users/users.module.js';
+
+import { StatisticsModule } from './statistics/statistics.module';
 
 @Module({
   imports: [
@@ -34,7 +37,9 @@ import { UsersModule } from './users/users.module.js';
     }),
     HabitCategoryModule,
     AuthModule,
+    HabitsModule,
     UsersModule,
+    StatisticsModule,
   ],
 })
 export class AppModule {}

@@ -70,12 +70,14 @@ export class UsersService {
   }
 
   async createSession(
+    sessionId: string,
     userId: string,
     refreshTokenHash: string,
     expiresAt: Date,
     userAgent?: string,
   ): Promise<UserSession> {
     const session = this.sessionRepo.create({
+      id: sessionId,
       userId,
       refreshTokenHash,
       expiresAt,
