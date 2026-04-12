@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Patch, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import type { User } from '../entities/user.entity.js';
+import { UpdateMyNotificationSettingDto } from './dto/update-my-notification-setting.dto.js';
+import { UpdateMyPrivacySettingDto } from './dto/update-my-privacy-setting.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 import { UsersService } from './users.service.js';
 
@@ -18,6 +20,43 @@ interface AuthenticatedRequest extends Request {
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Get('me/notification-setting')
+  @ApiOperation({ summary: '내 알림 설정 조회' })
+  @ApiResponse({ status: 200, description: '조회 성공' })
+  @ApiResponse({ status: 401, description: '인증 실패' })
+  getMyNotificationSetting(@Req() req: AuthenticatedRequest) {
+    return this.usersService.getOrCreateNotificationSetting(req.user.id);
+  }
+
+  @Patch('me/notification-setting')
+  @ApiOperation({ summary: '내 알림 설정 수정' })
+  @ApiResponse({ status: 200, description: '수정 성공' })
+  @ApiResponse({ status: 400, description: '유효하지 않은 요청' })
+  @ApiResponse({ status: 401, description: '인증 실패' })
+  patchMyNotificationSetting(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: UpdateMyNotificationSettingDto,
+  ) {
+    return this.usersService.updateNotificationSetting(req.user.id, dto);
+  }
+
+  @Get('me/privacy-setting')
+  @ApiOperation({ summary: '내 공개 범위 설정 조회' })
+  @ApiResponse({ status: 200, description: '조회 성공' })
+  @ApiResponse({ status: 401, description: '인증 실패' })
+  getMyPrivacySetting(@Req() req: AuthenticatedRequest) {
+    return this.usersService.getOrCreatePrivacySetting(req.user.id);
+  }
+
+  @Patch('me/privacy-setting')
+  @ApiOperation({ summary: '내 공개 범위 설정 수정' })
+  @ApiResponse({ status: 200, description: '수정 성공' })
+  @ApiResponse({ status: 400, description: '유효하지 않은 요청' })
+  @ApiResponse({ status: 401, description: '인증 실패' })
+  patchMyPrivacySetting(@Req() req: AuthenticatedRequest, @Body() dto: UpdateMyPrivacySettingDto) {
+    return this.usersService.updatePrivacySetting(req.user.id, dto);
+  }
 
   @Patch('me')
   @ApiOperation({ summary: '내 프로필 수정' })

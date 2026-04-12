@@ -2,6 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { HabitCategoryModule } from './habit-category/habit-category.module';
+import { FaqModule } from './faq/faq.module';
+import { FeedbackModule } from './feedback/feedback.module';
+import { NoticeModule } from './notice/notice.module';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module.js';
@@ -36,6 +39,9 @@ import { StatisticsModule } from './statistics/statistics.module';
       },
     }),
     HabitCategoryModule,
+    NoticeModule,
+    FaqModule,
+    FeedbackModule,
     AuthModule,
     HabitsModule,
     UsersModule,

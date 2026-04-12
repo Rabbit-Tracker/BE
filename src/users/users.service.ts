@@ -4,8 +4,13 @@ import { DataSource, Repository } from 'typeorm';
 
 import { User } from '../entities/user.entity.js';
 import { UserAuthProvider } from '../entities/user-auth-provider.entity.js';
+import { UserNotificationSetting } from '../entities/user-notification-setting.entity.js';
+import type { ContributionVisibility } from '../entities/user-privacy-setting.entity.js';
+import { UserPrivacySetting } from '../entities/user-privacy-setting.entity.js';
 import { UserSession } from '../entities/user-session.entity.js';
 import { OAuthProfileDto } from '../auth/dto/oauth-profile.dto.js';
+import { UpdateMyNotificationSettingDto } from './dto/update-my-notification-setting.dto.js';
+import { UpdateMyPrivacySettingDto } from './dto/update-my-privacy-setting.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
 
 @Injectable()
@@ -17,6 +22,10 @@ export class UsersService {
     private readonly authProviderRepo: Repository<UserAuthProvider>,
     @InjectRepository(UserSession)
     private readonly sessionRepo: Repository<UserSession>,
+    @InjectRepository(UserNotificationSetting)
+    private readonly notificationSettingRepo: Repository<UserNotificationSetting>,
+    @InjectRepository(UserPrivacySetting)
+    private readonly privacySettingRepo: Repository<UserPrivacySetting>,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -156,5 +165,57 @@ export class UsersService {
     });
 
     return { ok: true };
+  }
+
+  /** 알림 설정 행이 없으면 기본값으로 생성 후 반환 */
+  async getOrCreateNotificationSetting(userId: string): Promise<UserNotificationSetting> {
+    let row = await this.notificationSettingRepo.findOne({ where: { userId } });
+    if (!row) {
+      row = this.notificationSettingRepo.create({
+        userId,
+        isPushEnabled: true,
+        isWeeklyReportEnabled: false,
+        doNotDisturbStart: null,
+        doNotDisturbEnd: null,
+      });
+      row = await this.notificationSettingRepo.save(row);
+    }
+    return row;
+  }
+
+  /** 알림 설정 부분 수정 — 푸시 끄면 주간 리포트도 자동으로 끔 */
+  async updateNotificationSetting(
+    userId: string,
+    dto: UpdateMyNotificationSettingDto,
+  ): Promise<UserNotificationSetting> {
+    const row = await this.getOrCreateNotificationSetting(userId);
+    const merged = this.notificationSettingRepo.merge(row, dto);
+    if (merged.isPushEnabled === false) {
+      merged.isWeeklyReportEnabled = false;
+    }
+    return this.notificationSettingRepo.save(merged);
+  }
+
+  /** 공개 범위 행이 없으면 기본값으로 생성 후 반환 */
+  async getOrCreatePrivacySetting(userId: string): Promise<UserPrivacySetting> {
+    let row = await this.privacySettingRepo.findOne({ where: { userId } });
+    if (!row) {
+      row = this.privacySettingRepo.create({
+        userId,
+        todayProgressFriendsOnly: false,
+        contributionVisibility: 'friends' satisfies ContributionVisibility,
+      });
+      row = await this.privacySettingRepo.save(row);
+    }
+    return row;
+  }
+
+  async updatePrivacySetting(
+    userId: string,
+    dto: UpdateMyPrivacySettingDto,
+  ): Promise<UserPrivacySetting> {
+    const row = await this.getOrCreatePrivacySetting(userId);
+    const merged = this.privacySettingRepo.merge(row, dto);
+    return this.privacySettingRepo.save(merged);
   }
 }

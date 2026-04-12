@@ -17,6 +17,7 @@ import { Notification } from './entities/notification.entity';
 import { OnboardingProfile } from './entities/onboarding-profile.entity';
 import { UserAuthProvider } from './entities/user-auth-provider.entity';
 import { UserNotificationSetting } from './entities/user-notification-setting.entity';
+import { UserPrivacySetting } from './entities/user-privacy-setting.entity';
 import { UserSession } from './entities/user-session.entity';
 import { User } from './entities/user.entity';
 
@@ -35,6 +36,7 @@ const entities = [
   DeviceToken,
   Notification,
   UserNotificationSetting,
+  UserPrivacySetting,
   Notice,
   NoticeRead,
   Feedback,
