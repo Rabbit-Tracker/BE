@@ -77,7 +77,10 @@ export class FriendsService {
       order: { createdAt: 'DESC' },
       take: 200,
     });
-    return users.map((u) => this.toCardDto(u, relation));
+    // 이미 팔로우 중인 유저는 추천에서 제외 (추천 탭에서 안 보이게)
+    return users
+      .filter((u) => !relation.followingIds.has(u.id))
+      .map((u) => this.toCardDto(u, relation));
   }
 
   async getFollowing(currentUserId: string): Promise<FriendCardDto[]> {
