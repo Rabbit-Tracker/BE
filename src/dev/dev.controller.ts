@@ -22,9 +22,17 @@ export class DevController {
   @Post('seed-dummy-friends')
   async seedDummyFriends(
     @CurrentUser() user: CurrentUserPayload,
-    @Query('follow') follow: string | undefined,
-  ): Promise<{ created: number; followed: number }> {
-    const shouldFollow = follow === 'true';
+    @Query('following') following: string | undefined,
+    @Query('followers') followers: string | undefined,
+  ): Promise<{
+    created: number;
+    followingAdded: number;
+    followersAdded: number;
+    followingUserIds: string[];
+    followerUserIds: string[];
+  }> {
+    const followingCount = Math.max(0, Math.min(30, Number(following ?? '5') || 0));
+    const followersCount = Math.max(0, Math.min(30, Number(followers ?? '5') || 0));
 
     const nicknames = [
       '성실러',
@@ -69,21 +77,38 @@ export class DevController {
       dummyUserIds.push(saved.id);
     }
 
-    let followed = 0;
-    if (shouldFollow) {
-      for (const dummyId of dummyUserIds) {
-        if (dummyId === user.id) continue;
-        const exists = await this.followRepo.findOne({
-          where: { followerId: user.id, followingId: dummyId },
-        });
-        if (exists) continue;
-        await this.followRepo.save(
-          this.followRepo.create({ followerId: user.id, followingId: dummyId }),
-        );
-        followed += 1;
-      }
+    // 내 계정 → 더미 유저 (팔로잉)
+    // 팔로잉/팔로워가 "맞팔"처럼 전부 겹치지 않도록, 서로 다른 집합으로 나눈다.
+    const candidateIds = dummyUserIds.filter((id) => id !== user.id);
+    const followingUserIds = candidateIds.slice(0, followingCount);
+    let followingAdded = 0;
+    for (const dummyId of followingUserIds) {
+      if (dummyId === user.id) continue;
+      const exists = await this.followRepo.findOne({
+        where: { followerId: user.id, followingId: dummyId },
+      });
+      if (exists) continue;
+      await this.followRepo.save(
+        this.followRepo.create({ followerId: user.id, followingId: dummyId }),
+      );
+      followingAdded += 1;
     }
 
-    return { created, followed };
+    // 더미 유저 → 내 계정 (팔로워)
+    const followerUserIds = candidateIds.slice(followingCount, followingCount + followersCount);
+    let followersAdded = 0;
+    for (const dummyId of followerUserIds) {
+      if (dummyId === user.id) continue;
+      const exists = await this.followRepo.findOne({
+        where: { followerId: dummyId, followingId: user.id },
+      });
+      if (exists) continue;
+      await this.followRepo.save(
+        this.followRepo.create({ followerId: dummyId, followingId: user.id }),
+      );
+      followersAdded += 1;
+    }
+
+    return { created, followingAdded, followersAdded, followingUserIds, followerUserIds };
   }
 }

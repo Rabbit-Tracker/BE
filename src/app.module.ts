@@ -5,6 +5,7 @@ import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module.js';
 import { DevModule } from './dev/dev.module.js';
+import { FriendsModule } from './friends/friends.module.js';
 import { HabitsModule } from './habits/habits.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -32,6 +33,7 @@ import { StatisticsModule } from './statistics/statistics.module';
     }),
     AuthModule,
     DevModule,
+    FriendsModule,
     HabitsModule,
     UsersModule,
     StatisticsModule,
