@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Not, IsNull, Repository } from 'typeorm';
 
 import { User } from '../entities/user.entity.js';
 import { UserAuthProvider } from '../entities/user-auth-provider.entity.js';
@@ -32,6 +32,18 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { email } });
+  }
+
+  async findRecommendationCandidates(currentUserId: string): Promise<User[]> {
+    return this.userRepo.find({
+      where: {
+        id: Not(currentUserId),
+        status: 'active',
+        deletedAt: IsNull(),
+      },
+      order: { createdAt: 'DESC' },
+      take: 200,
+    });
   }
 
   async createWithProvider(profile: OAuthProfileDto): Promise<{ user: User; isNewUser: boolean }> {

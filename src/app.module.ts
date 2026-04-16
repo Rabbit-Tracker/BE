@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 
 import { AuthModule } from './auth/auth.module.js';
+import { DevModule } from './dev/dev.module.js';
 import { HabitsModule } from './habits/habits.module.js';
 import { UsersModule } from './users/users.module.js';
 
@@ -30,6 +31,7 @@ import { StatisticsModule } from './statistics/statistics.module';
       }),
     }),
     AuthModule,
+    DevModule,
     HabitsModule,
     UsersModule,
     StatisticsModule,
