@@ -10,8 +10,11 @@ import {
 
 import { User } from './user.entity';
 
-@Entity({ name: 'user_notification_settings' })
-export class UserNotificationSetting {
+/** 잔디 등 기여(연속) 노출 범위 — FE `settings` 공개 범위와 동일 */
+export type ContributionVisibility = 'all' | 'friends' | 'none';
+
+@Entity({ name: 'user_privacy_settings' })
+export class UserPrivacySetting {
   // PK: UUID
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -21,25 +24,17 @@ export class UserNotificationSetting {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  // 유저 ID (UNI)
+  // 유저 ID (UNIQUE)
   @Column({ name: 'user_id', type: 'uuid', unique: true })
   userId: string;
 
-  // 푸시 전체 활성 여부
-  @Column({ type: 'boolean', default: true })
-  isPushEnabled: boolean;
-
-  // 주간 습관 리포트 알림 수신 여부
+  // true면 오늘 진행률을 친구에게만 공개 (FE `todayProgressFriendsOnly` 와 동일 의미)
   @Column({ type: 'boolean', default: false })
-  isWeeklyReportEnabled: boolean;
+  todayProgressFriendsOnly: boolean;
 
-  // 방해 금지 시작 시간 (예: '23:00')
-  @Column({ type: 'varchar', length: 5, nullable: true })
-  doNotDisturbStart: string | null;
-
-  // 방해 금지 종료 시간 (예: '07:00')
-  @Column({ type: 'varchar', length: 5, nullable: true })
-  doNotDisturbEnd: string | null;
+  // 잔디(기여) 공개 범위: 전체 / 친구만 / 비공개
+  @Column({ type: 'varchar', length: 20, default: 'friends' })
+  contributionVisibility: ContributionVisibility;
 
   // 생성 시각
   @CreateDateColumn({ type: 'timestamptz' })
