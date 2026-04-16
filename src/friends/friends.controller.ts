@@ -49,6 +49,37 @@ export class FriendsController {
     return this.friendsService.getFriendById(user.id, id);
   }
 
+  @Get(':id/today-progress')
+  getFriendTodayProgress(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
+    return this.friendsService.getFriendTodayProgress(user.id, id);
+  }
+
+  @Get(':id/contribution')
+  getFriendContribution(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('id') id: string,
+    @Query('days') days?: string,
+  ) {
+    const parsed = Number(days ?? '150');
+    const safeDays = Number.isFinite(parsed) && parsed > 0 && parsed <= 365 ? parsed : 150;
+    return this.friendsService.getFriendContribution(user.id, id, safeDays);
+  }
+
+  @Get(':id/habits')
+  getFriendHabits(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string) {
+    return this.friendsService.getFriendHabits(user.id, id);
+  }
+
+  @Get(':id/checks')
+  getFriendChecks(
+    @CurrentUser() user: CurrentUserPayload,
+    @Param('id') id: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.friendsService.getFriendChecks(user.id, id, from, to);
+  }
+
   @Post(':id/follow')
   @HttpCode(HttpStatus.NO_CONTENT)
   async follow(@CurrentUser() user: CurrentUserPayload, @Param('id') id: string): Promise<void> {

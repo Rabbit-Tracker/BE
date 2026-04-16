@@ -5,6 +5,8 @@ import { Repository } from 'typeorm';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { CurrentUser, type CurrentUserPayload } from '../auth/decorators/current-user.decorator.js';
 import { Follow } from '../entities/follow.entity.js';
+import { HabitCheck } from '../entities/habit-check.entity.js';
+import { Habit } from '../entities/habit.entity.js';
 import { User } from '../entities/user.entity.js';
 
 @Controller('dev')
@@ -13,6 +15,8 @@ export class DevController {
   constructor(
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(Follow) private readonly followRepo: Repository<Follow>,
+    @InjectRepository(Habit) private readonly habitRepo: Repository<Habit>,
+    @InjectRepository(HabitCheck) private readonly checkRepo: Repository<HabitCheck>,
   ) {}
 
   /**
@@ -110,5 +114,136 @@ export class DevController {
     }
 
     return { created, followingAdded, followersAdded, followingUserIds, followerUserIds };
+  }
+
+  /**
+   * 개발용: "데이터있는친구" 유저 1명 생성 + 습관/체크 데이터 시드.
+   * - 친구 상세 화면에서 공개/비공개 케이스를 확인하기 위함
+   */
+  @Post('seed-data-friend')
+  async seedDataFriend(
+    @CurrentUser() user: CurrentUserPayload,
+    @Query('isPrivate') isPrivate?: string,
+    @Query('follow') follow?: string,
+  ): Promise<{ userId: string; created: boolean }> {
+    const privateFlag = isPrivate === 'true';
+    const shouldFollow = follow !== 'false';
+
+    const email = `data_friend_${privateFlag ? 'private' : 'public'}@example.com`;
+    let friend = await this.userRepo.findOne({ where: { email } });
+    let created = false;
+    if (!friend) {
+      friend = await this.userRepo.save(
+        this.userRepo.create({
+          nickname: '데이터있는친구',
+          email,
+          avatarEmoji: privateFlag ? '🔒' : '📊',
+          avatarUrl: null,
+          isPrivate: privateFlag,
+          status: 'active',
+          timezone: 'Asia/Seoul',
+        }),
+      );
+      created = true;
+    }
+
+    // 습관 데이터가 없으면 생성
+    const existingHabits = await this.habitRepo.find({ where: { userId: friend.id } });
+    if (existingHabits.length === 0) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startDate = new Date(today);
+      startDate.setDate(startDate.getDate() - 10);
+
+      const habit1 = await this.habitRepo.save(
+        this.habitRepo.create({
+          userId: friend.id,
+          categoryId: null,
+          name: '물 8잔',
+          description: null,
+          frequency: 'daily',
+          frequencyDetail: null,
+          selectedDays: null,
+          notificationTimes: [],
+          startDate,
+          endDate: null,
+          excludedDates: null,
+          icon: '💧',
+          status: 'active',
+          archivedAt: null,
+        }),
+      );
+      const habit2 = await this.habitRepo.save(
+        this.habitRepo.create({
+          userId: friend.id,
+          categoryId: null,
+          name: '10분 스트레칭',
+          description: null,
+          frequency: 'daily',
+          frequencyDetail: null,
+          selectedDays: null,
+          notificationTimes: [],
+          startDate,
+          endDate: null,
+          excludedDates: null,
+          icon: '🧘',
+          status: 'active',
+          archivedAt: null,
+        }),
+      );
+      const habit3 = await this.habitRepo.save(
+        this.habitRepo.create({
+          userId: friend.id,
+          categoryId: null,
+          name: '영어 단어 20개',
+          description: null,
+          frequency: 'daily',
+          frequencyDetail: null,
+          selectedDays: null,
+          notificationTimes: [],
+          startDate,
+          endDate: null,
+          excludedDates: null,
+          icon: '📚',
+          status: 'active',
+          archivedAt: null,
+        }),
+      );
+
+      // 최근 14일 체크 시드 (랜덤)
+      const habits = [habit1, habit2, habit3];
+      for (let i = 0; i < 14; i += 1) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        d.setHours(0, 0, 0, 0);
+        for (const h of habits) {
+          const checked = Math.random() > 0.35; // 65% 정도 체크
+          if (!checked) continue;
+          await this.checkRepo.save(
+            this.checkRepo.create({
+              habitId: h.id,
+              userId: friend.id,
+              checkDate: d,
+              isChecked: true,
+              checkedAt: new Date(),
+              notificationTime: null,
+            }),
+          );
+        }
+      }
+    }
+
+    if (shouldFollow) {
+      const existing = await this.followRepo.findOne({
+        where: { followerId: user.id, followingId: friend.id },
+      });
+      if (!existing) {
+        await this.followRepo.save(
+          this.followRepo.create({ followerId: user.id, followingId: friend.id }),
+        );
+      }
+    }
+
+    return { userId: friend.id, created };
   }
 }
